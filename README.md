@@ -1,5 +1,8 @@
 # django-signalhooks
 
+![Travis status](https://travis-ci.org/martinzugnoni/django-signalhooks.svg?branch=master)
+![Coverage](https://codecov.io/gh/martinzugnoni/django-signalhooks/branch/master/graphs/badge.svg?branch=master)
+
 ## TL; DR
 
 ```bash
