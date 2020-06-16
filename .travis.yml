@@ -1,0 +1,11 @@
+language: python
+python:
+  - "3.8"
+  - "3.7"
+install:
+  - pip install poetry
+  - poetry install
+script:
+  - make build
+after_success:
+  - codecov
