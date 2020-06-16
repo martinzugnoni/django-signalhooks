@@ -128,3 +128,4 @@ dmypy.json
 
 # Editors
 .vscode/
+.DS_Store

@@ -1,5 +1,32 @@
 # django-signalhooks
 
+## TL; DR
+
+```bash
+$ pip install signalhooks
+```
+
+```python
+from django.db.models.signals import post_save
+from signalhooks.hooks import SNSSignalHook, HTTPSignalHook
+
+from myapp.models import Pizza
+
+
+# SNS hooks
+sns_hook = SNSSignalHook(
+    sns_topic_arn="arn:aws:sns:us-east-1:585698547586:your-topic")
+post_save.connect(sns_hook, sender=Pizza)
+
+
+# HTTP(S) hooks
+http_hook = HTTPSignalHook(
+    request_url="https://my-other-microservice.app/api/v1/callback")
+post_save.connect(http_hook, sender=Pizza)
+```
+
+🎉 Start receiving notifications!
+
 ## The problem
 
 Microservice architectures are great, but keeping services syncronized about distributed events can be very challenging.
@@ -29,6 +56,8 @@ Currently, these are the supported hooks:
 * `SNSSignalHook`: Publishes a message to a AWS SNS Topic each time a Signal is triggered.
 
 * `HTTPSignalHook`: Performs a HTTP(S) webhook request each time a Signal is trigerred.
+
+* Any other idea? [Create an issue](https://github.com/martinzugnoni/django-signalhooks/issues/new).
 
 ### SNSSignalHook
 
