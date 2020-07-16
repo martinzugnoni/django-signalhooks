@@ -88,7 +88,7 @@ class SNSSignalHook(SignalHook):
         return "Django Signal triggered"
 
     def get_sns_msg_attributes(self, instance=None, created=None):
-        if not all([instance, created]):
+        if instance is None or created is None:
             return {}
 
         ct = ContentType.objects.get_for_model(instance)
