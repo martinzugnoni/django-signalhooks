@@ -92,7 +92,8 @@ class SNSSignalHook(SignalHook):
             return {}
 
         ct = ContentType.objects.get_for_model(instance)
-        return {
+
+        messageAttributes = {
             "Event": {
                 "DataType": "String",
                 "StringValue": f"{ct.app_label}.{ct.model}:{'created' if created else 'updated'}",
@@ -103,6 +104,13 @@ class SNSSignalHook(SignalHook):
                 "StringValue": self.serialize_instance(instance),
             },
         }
+        if not created and instance._old_instance:
+            messageAttributes["OldInstance"] = {
+                "DataType": "String",
+                "StringValue": self.serialize_instance(instance._old_instance),
+            }
+
+        return messageAttributes
 
     def __call__(self, signal, sender, **kwargs):
         """
