@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "signalhooks"
-version = "0.1.0"
+name = "django-signalhooks"
+version = "0.1.3"
 description = "Set of useful hooks that you can attach to your Django Signals to notify other services when a Signal is triggered"
 authors = ["Martin Zugnoni <martin.zugnoni@gmail.com>"]
 
