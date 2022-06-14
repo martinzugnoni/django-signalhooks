@@ -104,7 +104,7 @@ class SNSSignalHook(SignalHook):
                 "StringValue": self.serialize_instance(instance),
             },
         }
-        if not created and instance._old_instance:
+        if not created and hasattr(instance, "_old_instance"):
             messageAttributes["OldInstance"] = {
                 "DataType": "String",
                 "StringValue": self.serialize_instance(instance._old_instance),

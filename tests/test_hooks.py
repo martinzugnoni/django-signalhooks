@@ -38,7 +38,118 @@ class SNSSignalHookTestCase(BaseHooksTestCase):
     @moto.mock_sns
     @moto.mock_sqs
     @pytest.mark.django_db
-    def test_sns_signal_hook(self):
+    def test_sns_signal_hook_for_update_with_no_old_instance(self):
+        """
+        Should send a SNS Notification with the serialized Model instance.
+        """
+        sns_client = boto3.client("sns", region_name="us-east-1")
+        topic = sns_client.create_topic(Name="testing-topic")
+        topic_arn = topic["TopicArn"]
+
+        # add SQS subscriber to be able to read a message
+        # normally you will use webhook (http, https) subscribers to
+        # notify other services
+        sqs_client = boto3.client("sqs", region_name="us-east-1")
+        queue_url = sqs_client.create_queue(QueueName="test-queue")["QueueUrl"]
+        queue_arn = sqs_client.get_queue_attributes(QueueUrl=queue_url)["Attributes"][
+            "QueueArn"
+        ]
+        sns_client.subscribe(TopicArn=topic_arn, Protocol="sqs", Endpoint=queue_arn)
+
+        hook = SNSSignalHook(sns_topic_arn=topic_arn)
+        post_save.connect(hook, sender=FakeModel)
+
+        instance = FakeModel()
+        instance.name = "Neapolitan"
+        post_save.send(instance=instance, sender=FakeModel, created=False)
+
+        msg = sqs_client.receive_message(QueueUrl=queue_url)
+        body = json.loads(msg["Messages"][0]["Body"])
+
+        self.assertEqual(body["Message"], "Django Signal triggered")
+        self.assertEqual(
+            body["MessageAttributes"],
+            {
+                "Event": {"Type": "String", "Value": "tests.fakemodel:updated"},
+                "InstanceId": {"Type": "String", "Value": "None"},
+                "Instance": {
+                    "Type": "String",
+                    "Value": "eyJtb2RlbCI6ICJ0ZXN0cy5mYWtlbW9kZWwiLCAicGsiOiBudWxsLCAiZmllbGRzIjogeyJuYW1lIjogIk5lYXBvbGl0YW4ifX0=",
+                },
+            },
+        )
+
+        json_instance = json.loads(
+            base64.b64decode(body["MessageAttributes"]["Instance"]["Value"])
+        )
+        self.assertEqual(
+            json_instance,
+            {"model": "tests.fakemodel", "pk": None, "fields": {"name": "Neapolitan"}},
+        )
+
+    @moto.mock_sns
+    @moto.mock_sqs
+    @pytest.mark.django_db
+    def test_sns_signal_hook_for_update_with_old_instance(self):
+        """
+        Should send a SNS Notification with the serialized Model instance.
+        """
+        sns_client = boto3.client("sns", region_name="us-east-1")
+        topic = sns_client.create_topic(Name="testing-topic")
+        topic_arn = topic["TopicArn"]
+
+        # add SQS subscriber to be able to read a message
+        # normally you will use webhook (http, https) subscribers to
+        # notify other services
+        sqs_client = boto3.client("sqs", region_name="us-east-1")
+        queue_url = sqs_client.create_queue(QueueName="test-queue")["QueueUrl"]
+        queue_arn = sqs_client.get_queue_attributes(QueueUrl=queue_url)["Attributes"][
+            "QueueArn"
+        ]
+        sns_client.subscribe(TopicArn=topic_arn, Protocol="sqs", Endpoint=queue_arn)
+
+        hook = SNSSignalHook(sns_topic_arn=topic_arn)
+        post_save.connect(hook, sender=FakeModel)
+
+        instance = FakeModel()
+        instance.name = "Neapolitan"
+        _old_instance = FakeModel()
+        _old_instance.name = "Siciliana"
+        instance._old_instance = FakeModel()
+        post_save.send(instance=instance, sender=FakeModel, created=False)
+
+        msg = sqs_client.receive_message(QueueUrl=queue_url)
+        body = json.loads(msg["Messages"][0]["Body"])
+
+        self.assertEqual(body["Message"], "Django Signal triggered")
+        self.assertEqual(
+            body["MessageAttributes"],
+            {
+                "Event": {"Type": "String", "Value": "tests.fakemodel:updated"},
+                "InstanceId": {"Type": "String", "Value": "None"},
+                "Instance": {
+                    "Type": "String",
+                    "Value": "eyJtb2RlbCI6ICJ0ZXN0cy5mYWtlbW9kZWwiLCAicGsiOiBudWxsLCAiZmllbGRzIjogeyJuYW1lIjogIk5lYXBvbGl0YW4ifX0=",
+                },
+                "OldInstance": {
+                    "Type": "String",
+                    "Value": "eyJtb2RlbCI6ICJ0ZXN0cy5mYWtlbW9kZWwiLCAicGsiOiBudWxsLCAiZmllbGRzIjogeyJuYW1lIjogIiJ9fQ==",
+                },
+            },
+        )
+
+        json_instance = json.loads(
+            base64.b64decode(body["MessageAttributes"]["Instance"]["Value"])
+        )
+        self.assertEqual(
+            json_instance,
+            {"model": "tests.fakemodel", "pk": None, "fields": {"name": "Neapolitan"}},
+        )
+
+    @moto.mock_sns
+    @moto.mock_sqs
+    @pytest.mark.django_db
+    def test_sns_signal_hook_for_creation(self):
         """
         Should send a SNS Notification with the serialized Model instance.
         """
