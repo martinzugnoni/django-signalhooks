@@ -61,10 +61,6 @@ class TestSetup(TestCase):
             max_depth=1,
         )
         result = sns_hook.get_sns_msg_attributes(instance=self.parent, created=True)
-        #        result = serialize(
-        #            "json.nested", [self.parent], nested_fields=["child"], max_depth=1
-        #        )
-        print(result)
         self.assertEqual(
             base64.b64decode(result["Instance"]["StringValue"]).decode("utf-8"),
             NESTED_FIELDS_DEPTH_1,
@@ -80,19 +76,10 @@ class TestSetup(TestCase):
             max_depth=2,
         )
         result = sns_hook.get_sns_msg_attributes(instance=self.parent, created=True)
-        # result = serialize(
-        #     "json.nested",
-        #     [self.parent],
-        #     nested_fields=["child", "anotherChildren"],
-        #     max_depth=2,
-        # )
-        print(result)
         self.assertEqual(
             base64.b64decode(result["Instance"]["StringValue"]).decode("utf-8"),
             NESTED_FIELDS_DEPTH_2,
         )
-
-    #        self.assertEqual(result, NESTED_FIELDS_DEPTH_2)
 
     def test_serializer_with_array_nested_fields_depth(self):
         sns_hook = SNSSignalHook(
@@ -105,11 +92,6 @@ class TestSetup(TestCase):
             base64.b64decode(result["Instance"]["StringValue"]).decode("utf-8"),
             ARRAY_NESTED_FIELDS_DEPTH_1,
         )
-        # result = serialize(
-        #     "json.nested", [self.parent], nested_fields=["anotherChildren"]
-        # )
-        # print(result)
-        # self.assertEqual(result, ARRAY_NESTED_FIELDS_DEPTH_1)
 
 
 class AnotherChildFactory(factory.django.DjangoModelFactory):
