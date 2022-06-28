@@ -1,10 +1,9 @@
 from django.core.serializers import register_serializer
-from django.core.serializers import serialize
 from django.core.management import call_command
 from django.db import connection
 from django.test import TestCase
 from signalhooks.hooks import SNSSignalHook
-from signalhooks.models import Parent, Child, AnotherChild
+from tests.models import Parent, Child, AnotherChild
 from expected_responses import *
 import base64
 import pytest
@@ -44,14 +43,11 @@ class TestSetup(TestCase):
             nested_fields=["child"],
         )
         result = sns_hook.get_sns_msg_attributes(instance=self.parent, created=True)
-        #        result = serialize("json.nested", [self.parent], nested_fields=["child"])
         print(result)
         self.assertEqual(
             base64.b64decode(result["Instance"]["StringValue"]).decode("utf-8"),
             NESTED_FIELDS_DEFAULT_DEPTH,
         )
-
-    #       self.assertEqual(result, NESTED_FIELDS_DEFAULT_DEPTH)
 
     def test_serializer_with_nested_fields_depth_1(self):
         sns_hook = SNSSignalHook(
@@ -65,8 +61,6 @@ class TestSetup(TestCase):
             base64.b64decode(result["Instance"]["StringValue"]).decode("utf-8"),
             NESTED_FIELDS_DEPTH_1,
         )
-
-    #        self.assertEqual(result, NESTED_FIELDS_DEPTH_1)
 
     def test_serializer_with_nested_fields_depth_2(self):
         sns_hook = SNSSignalHook(
