@@ -12,11 +12,18 @@ class Serializer(JsonSerializer):
         self._current = None
 
     def _init_options(self):
+        """
+        Extract nested_fields and max_depth parameters, stores them in the instance 
+        and calls super()._init_options().
+        """
         self._max_depth = self.options.pop("max_depth", 0)
         self._nested_fields = self.options.pop("nested_fields", [])
         super()._init_options()
 
-    def m2m_full_object(self, obj, field):
+    def m2m_full_object(self, obj):
+        """
+        Serializes a full object instance that belongs to a ManyToMany relationship.
+        """
         self._level += 1
         aux = self._current
         value = self.serialize_fk(obj)
@@ -25,6 +32,10 @@ class Serializer(JsonSerializer):
         return value
 
     def handle_m2m_field(self, obj, field):
+        """
+        We override this method to check if the ManyToMany attribute is required to be serialized or not.
+        We call custom serialization if needed.
+        """
         if field.remote_field.through._meta.auto_created:
             if field.name not in self._nested_fields or self._level > self._max_depth:
 
@@ -34,13 +45,17 @@ class Serializer(JsonSerializer):
             else:
 
                 def m2m_value(value):
-                    return self.m2m_full_object(value, value._meta.pk)
+                    return self.m2m_full_object(value)
 
             self._current[field.name] = [
                 m2m_value(related) for related in getattr(obj, field.name).iterator()
             ]
 
     def _value_from_field(self, obj, field):
+        """
+        This method overrides the default behaviour for ForeingKey and
+        returns full object if needed. The rest of the behaviour remains the same.
+        """
         if isinstance(field, ForeignKey):
             self._level += 1
             aux = self._current
@@ -54,6 +69,10 @@ class Serializer(JsonSerializer):
         return field.value_to_string(obj)
 
     def handle_fk_field(self, obj, field):
+        """
+        Decides if we need to call custom or default serialization based on _nested_fields 
+        and max_depth.
+        """
         if self._level > self._max_depth or field.name not in self._nested_fields:
             value = super()._value_from_field(obj, field)
         else:
@@ -61,6 +80,9 @@ class Serializer(JsonSerializer):
         self._current[field.name] = value
 
     def serialize_fk(self, o):
+        """
+        Overrides default serialization to call the new methods for ForeingKey and m2m. 
+        """
         self.start_object(o)
         concrete_model = o._meta.concrete_model
         for field in concrete_model._meta.local_fields:
