@@ -13,7 +13,7 @@ class Serializer(JsonSerializer):
 
     def _init_options(self):
         """
-        Extract nested_fields and max_depth parameters, stores them in the instance 
+        Extract nested_fields and max_depth parameters, stores them in the instance
         and calls super()._init_options().
         """
         self._max_depth = self.options.pop("max_depth", 0)
@@ -70,7 +70,7 @@ class Serializer(JsonSerializer):
 
     def handle_fk_field(self, obj, field):
         """
-        Decides if we need to call custom or default serialization based on _nested_fields 
+        Decides if we need to call custom or default serialization based on _nested_fields
         and max_depth.
         """
         if self._level > self._max_depth or field.name not in self._nested_fields:
@@ -81,7 +81,7 @@ class Serializer(JsonSerializer):
 
     def serialize_fk(self, o):
         """
-        Overrides default serialization to call the new methods for ForeingKey and m2m. 
+        Overrides default serialization to call the new methods for ForeingKey and m2m.
         """
         self.start_object(o)
         concrete_model = o._meta.concrete_model

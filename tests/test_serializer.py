@@ -20,12 +20,14 @@ class TestSetup(TestCase):
         self.ac1 = AnotherChildFactory(name="Another Child 1")
         self.ac2 = AnotherChildFactory(name="Another Child 2")
         self.c1 = ChildFactory.create(name="Child", desc="Description for child1")
-        self.c1.anotherChildren = self.ac1
+        self.c1.another_children = self.ac1
         self.c2 = ChildFactory(name="Child2", desc="Description for child2",)
 
-        self.parent = ParentFactory(name="New Parent", child=self.c1, mainChild=self.c2)
-        self.parent.anotherChildren.add(self.ac1)
-        self.parent.anotherChildren.add(self.ac2)
+        self.parent = ParentFactory(
+            name="New Parent", child=self.c1, main_child=self.c2
+        )
+        self.parent.another_children.add(self.ac1)
+        self.parent.another_children.add(self.ac2)
 
     def test_serializer_with_no_nested_fields_no_depth(self):
         sns_hook = SNSSignalHook(sns_topic_arn="test_topic", serializer="json.nested")
@@ -66,7 +68,7 @@ class TestSetup(TestCase):
         sns_hook = SNSSignalHook(
             sns_topic_arn="test_topic",
             serializer="json.nested",
-            nested_fields=["child", "anotherChildren"],
+            nested_fields=["child", "another_children"],
             max_depth=2,
         )
         result = sns_hook.get_sns_msg_attributes(instance=self.parent, created=True)
@@ -79,7 +81,7 @@ class TestSetup(TestCase):
         sns_hook = SNSSignalHook(
             sns_topic_arn="test_topic",
             serializer="json.nested",
-            nested_fields=["anotherChildren"],
+            nested_fields=["another_children"],
         )
         result = sns_hook.get_sns_msg_attributes(instance=self.parent, created=True)
         self.assertEqual(

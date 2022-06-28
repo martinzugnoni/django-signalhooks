@@ -6,7 +6,7 @@ class AnotherChild(models.Model):
 
     class Meta:
         app_label = "tests"
-        db_table = "anotherChild"
+        db_table = "another_child"
 
 
 class Parent(models.Model):
@@ -16,11 +16,11 @@ class Parent(models.Model):
     child = models.ForeignKey(
         "tests.Child", on_delete=models.CASCADE, blank=True, null=True
     )
-    mainChild = models.ForeignKey(
+    main_child = models.ForeignKey(
         "tests.Child", on_delete=models.CASCADE, blank=True, null=True
     )
-    anotherChildren = models.ManyToManyField(
-        AnotherChild, verbose_name="anotherChildren", blank=True, related_name="parent"
+    another_children = models.ManyToManyField(
+        AnotherChild, verbose_name="another_children", blank=True, related_name="parent"
     )
 
     class Meta:
@@ -28,7 +28,7 @@ class Parent(models.Model):
 
 
 class Child(models.Model):
-    anotherChild = models.ForeignKey(
+    another_child = models.ForeignKey(
         "tests.AnotherChild", on_delete=models.CASCADE, blank=True, null=True
     )
     name = models.CharField(max_length=100)
