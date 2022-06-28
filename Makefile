@@ -17,4 +17,4 @@ build:
 	@echo $(TAG)Building Project$(END)
 	poetry run black . --check
 	poetry run pylint --rcfile=.pylintrc signalhooks/*
-	PYTHONPATH=$(PYTHONPATH) DJANGO_SETTINGS_MODULE=$(DJANGO_SETTINGS) poetry run pytest --cov=signalhooks --cov-config=.coveragerc   --cov-fail-under=90 tests
+	PYTHONPATH=$(PYTHONPATH) DJANGO_SETTINGS_MODULE=$(DJANGO_SETTINGS) poetry run pytest --cov=signalhooks --cov-config=.coveragerc --cov-fail-under=90 tests
