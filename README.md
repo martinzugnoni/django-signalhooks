@@ -116,6 +116,59 @@ sns_client.publish(
 
 Note that `"Instance"` is a JSON serialization of your `Pizza` model, encoded as `base64` to allow transportation in a JSON payload.
 
+### New Nested Json Serializer
+
+Note: This feature is available since `v0.1.4` and only for SNSSignalHooks
+
+The default json serializer serializes the primary key or natural keys for ForeingKey or ManyToMany relationships. 
+This is not helpful if we need to know additional information about the nested fields. 
+Now we have a new Nested Serializer to do this job.
+
+We have three new initial parameters: 
+* `serializer`: receives the serializer to use, `json` by default
+* `nested_fields`: an array of nested fields to be serialized. They could be at any nested level.
+* `max_depth`: object nesting level needed. 
+
+If nested_fields or max_depth are missing, it will behave like default serializer.
+
+### Serializer registration
+
+The first thing we need to do is register as a serializer.
+
+```python
+from django.core.serializers import register_serializer
+
+register_serializer("json.nested", "signalhooks.serializer.nested")
+```
+
+Now we are ready to initialize the SNSSignalHook.
+
+
+### Examples 
+
+Suppose that a model `C` is an attribute of model `B` with model `B` being an attribute of `A`.
+
+```python
+sns_hook = SNSSignalHook(
+    sns_topic_arn="arn:aws:sns:us-east-1:0123456789:your-topic",
+    serializer="json.nested",
+    nested_fields=["b"],
+    max_depth=1,
+)
+```
+This config will serialize all the non Primary Key or M2M attributes of  `b` and the primary key of `c` 
+
+If we do
+
+```python
+sns_hook = SNSSignalHook(
+    sns_topic_arn="arn:aws:sns:us-east-1:0123456789:your-topic",
+    serializer="json.nested",
+    nested_fields=["b", "c"],
+    max_depth=2,
+)
+```
+This config will serialize all the non Primary Key or M2M attributes of  `b` and the non PK or m2m attributes of `c` 
 
 ### HTTPSignalHook
 

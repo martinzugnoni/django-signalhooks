@@ -11,11 +11,23 @@ class SignalHook:
     def __call__(self, signal, sender, **kwargs):
         pass
 
-    def serialize_instance(self, instance):
+    def serialize_instance(self, instance, **kwargs):
         """
         Serializes given Model instance as JSON and encodes it as base64.
         """
-        json_instance = serialize("json", [instance], ensure_ascii=False)[1:-1]
+        serializer = kwargs.get("serializer", "json")
+        if serializer == "json.nested":
+            nested_fields = kwargs.get("nested_fields", [])
+            max_depth = kwargs.get("max_depth", 0)
+            json_instance = serialize(
+                serializer,
+                [instance],
+                ensure_ascii=False,
+                nested_fields=nested_fields,
+                max_depth=max_depth,
+            )[1:-1]
+        else:
+            json_instance = serialize(serializer, [instance], ensure_ascii=False)[1:-1]
         return base64.b64encode(json_instance.encode("utf-8")).decode("utf-8")
 
 
@@ -72,6 +84,9 @@ class SNSSignalHook(SignalHook):
         self.aws_secret_key = aws_secret_key
         self.aws_region = aws_region
         self.sns_topic_arn = sns_topic_arn
+        self.serializer = kwargs.get("serializer", "json")
+        self.nested_fields = kwargs.get("nested_fields", [])
+        self.max_depth = kwargs.get("max_depth", 0)
 
     def get_sns_client(self):
         params = {"region_name": self.aws_region}
@@ -101,13 +116,23 @@ class SNSSignalHook(SignalHook):
             "InstanceId": {"DataType": "String", "StringValue": str(instance.id),},
             "Instance": {
                 "DataType": "String",
-                "StringValue": self.serialize_instance(instance),
+                "StringValue": self.serialize_instance(
+                    instance,
+                    serializer=self.serializer,
+                    nested_fields=self.nested_fields,
+                    max_depth=self.max_depth,
+                ),
             },
         }
         if not created and hasattr(instance, "_old_instance"):
             messageAttributes["OldInstance"] = {
                 "DataType": "String",
-                "StringValue": self.serialize_instance(instance._old_instance),
+                "StringValue": self.serialize_instance(
+                    instance._old_instance,
+                    serializer=self.serializer,
+                    nested_fields=self.nested_fields,
+                    max_depth=self.max_depth,
+                ),
             }
 
         return messageAttributes
