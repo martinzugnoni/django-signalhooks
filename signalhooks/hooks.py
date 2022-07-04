@@ -127,12 +127,9 @@ class SNSSignalHook(SignalHook):
         if not created and hasattr(instance, "_old_instance"):
             messageAttributes["OldInstance"] = {
                 "DataType": "String",
-                "StringValue": self.serialize_instance(
-                    instance._old_instance,
-                    serializer=self.serializer,
-                    nested_fields=self.nested_fields,
-                    max_depth=self.max_depth,
-                ),
+                "StringValue": base64.b64encode(
+                    instance._old_instance.encode("utf-8")
+                ).decode("utf-8"),
             }
 
         return messageAttributes
