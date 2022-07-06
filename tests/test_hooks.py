@@ -113,9 +113,6 @@ class SNSSignalHookTestCase(BaseHooksTestCase):
 
         instance = FakeModel()
         instance.name = "Neapolitan"
-        _old_instance = FakeModel()
-        _old_instance.name = "Siciliana"
-        instance._old_instance = FakeModel()
         post_save.send(instance=instance, sender=FakeModel, created=False)
 
         msg = sqs_client.receive_message(QueueUrl=queue_url)
@@ -130,10 +127,6 @@ class SNSSignalHookTestCase(BaseHooksTestCase):
                 "Instance": {
                     "Type": "String",
                     "Value": "eyJtb2RlbCI6ICJ0ZXN0cy5mYWtlbW9kZWwiLCAicGsiOiBudWxsLCAiZmllbGRzIjogeyJuYW1lIjogIk5lYXBvbGl0YW4ifX0=",
-                },
-                "OldInstance": {
-                    "Type": "String",
-                    "Value": "eyJtb2RlbCI6ICJ0ZXN0cy5mYWtlbW9kZWwiLCAicGsiOiBudWxsLCAiZmllbGRzIjogeyJuYW1lIjogIiJ9fQ==",
                 },
             },
         )
