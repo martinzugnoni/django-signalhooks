@@ -109,3 +109,4 @@ class Serializer(JsonSerializer):
                         self.handle_m2m_field(o, field)
             value = self.get_dump_object(o)
             return value
+        return None
