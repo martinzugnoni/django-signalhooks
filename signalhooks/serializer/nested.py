@@ -86,7 +86,7 @@ class Serializer(JsonSerializer):
         self.start_object(o)
         concrete_model = o._meta.concrete_model
         for field in concrete_model._meta.local_fields:
-            if field.serialize or field is None:
+            if field.serialize:
                 if field.remote_field is None:
                     if (
                         self.selected_fields is None
