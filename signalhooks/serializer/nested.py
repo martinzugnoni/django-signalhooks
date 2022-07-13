@@ -83,28 +83,29 @@ class Serializer(JsonSerializer):
         """
         Overrides default serialization to call the new methods for ForeingKey and m2m.
         """
-        self.start_object(o)
-        concrete_model = o._meta.concrete_model
-        for field in concrete_model._meta.local_fields:
-            if field.serialize or field is None:
-                if field.remote_field is None:
+        if o:
+            self.start_object(o)
+            concrete_model = o._meta.concrete_model
+            for field in concrete_model._meta.local_fields:
+                if field.serialize or field is None:
+                    if field.remote_field is None:
+                        if (
+                            self.selected_fields is None
+                            or field.attname in self.selected_fields
+                        ):
+                            self.handle_field(o, field)
+                    else:
+                        if (
+                            self.selected_fields is None
+                            or field.attname[:-3] in self.selected_fields
+                        ):
+                            self.handle_fk_field(o, field)
+            for field in concrete_model._meta.local_many_to_many:
+                if field.serialize:
                     if (
                         self.selected_fields is None
                         or field.attname in self.selected_fields
                     ):
-                        self.handle_field(o, field)
-                else:
-                    if (
-                        self.selected_fields is None
-                        or field.attname[:-3] in self.selected_fields
-                    ):
-                        self.handle_fk_field(o, field)
-        for field in concrete_model._meta.local_many_to_many:
-            if field.serialize:
-                if (
-                    self.selected_fields is None
-                    or field.attname in self.selected_fields
-                ):
-                    self.handle_m2m_field(o, field)
-        value = self.get_dump_object(o)
-        return value
+                        self.handle_m2m_field(o, field)
+            value = self.get_dump_object(o)
+            return value
