@@ -48,7 +48,9 @@ class Serializer(JsonSerializer):
                     return self.m2m_full_object(value)
 
             self._current[field.name] = [
-                m2m_value(related) for related in getattr(obj, field.name).iterator()
+                m2m_value(related)
+                for related in getattr(obj, field.name).iterator()
+                if related is not None
             ]
 
     def _value_from_field(self, obj, field):
@@ -56,7 +58,7 @@ class Serializer(JsonSerializer):
         This method overrides the default behaviour for ForeingKey and
         returns full object if needed. The rest of the behaviour remains the same.
         """
-        if isinstance(field, ForeignKey):
+        if isinstance(field, ForeignKey) and getattr(obj, field.name):
             self._level += 1
             aux = self._current
             value = self.serialize_fk(getattr(obj, field.name))
@@ -83,30 +85,28 @@ class Serializer(JsonSerializer):
         """
         Overrides default serialization to call the new methods for ForeingKey and m2m.
         """
-        if o:
-            self.start_object(o)
-            concrete_model = o._meta.concrete_model
-            for field in concrete_model._meta.local_fields:
-                if field.serialize or field is None:
-                    if field.remote_field is None:
-                        if (
-                            self.selected_fields is None
-                            or field.attname in self.selected_fields
-                        ):
-                            self.handle_field(o, field)
-                    else:
-                        if (
-                            self.selected_fields is None
-                            or field.attname[:-3] in self.selected_fields
-                        ):
-                            self.handle_fk_field(o, field)
-            for field in concrete_model._meta.local_many_to_many:
-                if field.serialize:
+        self.start_object(o)
+        concrete_model = o._meta.concrete_model
+        for field in concrete_model._meta.local_fields:
+            if field.serialize or field is None:
+                if field.remote_field is None:
                     if (
                         self.selected_fields is None
                         or field.attname in self.selected_fields
                     ):
-                        self.handle_m2m_field(o, field)
-            value = self.get_dump_object(o)
-            return value
-        return None
+                        self.handle_field(o, field)
+                else:
+                    if (
+                        self.selected_fields is None
+                        or field.attname[:-3] in self.selected_fields
+                    ):
+                        self.handle_fk_field(o, field)
+        for field in concrete_model._meta.local_many_to_many:
+            if field.serialize:
+                if (
+                    self.selected_fields is None
+                    or field.attname in self.selected_fields
+                ):
+                    self.handle_m2m_field(o, field)
+        value = self.get_dump_object(o)
+        return value
