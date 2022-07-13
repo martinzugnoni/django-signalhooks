@@ -48,9 +48,7 @@ class Serializer(JsonSerializer):
                     return self.m2m_full_object(value)
 
             self._current[field.name] = [
-                m2m_value(related)
-                for related in getattr(obj, field.name).iterator()
-                if related is not None
+                m2m_value(related) for related in getattr(obj, field.name).iterator()
             ]
 
     def _value_from_field(self, obj, field):
